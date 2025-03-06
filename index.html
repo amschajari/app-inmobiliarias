@@ -247,7 +247,7 @@
                 <input type="text" id="searchInput" placeholder="Buscar lugar...">
                 <button id="searchBtn" class="custom-button">BUSCAR</button>
                 <button class="locate-btn custom-button" id="locateBtn">Localizame</button>
-                <button id="exportBtn" class="custom-button">Exportar a GeoJSON</button>
+                <button id="exportBtn" class="custom-button">Guardar GeoJSON</button>
                 <div class="import-container">
                     <button id="importBtn" class="custom-button">Importar GeoJSON</button>
                     <input type="file" id="importInput" accept=".geojson,.json">
@@ -413,8 +413,8 @@
                 }
             });
 
-            // Exportar a GeoJSON con opción de reemplazo
-            document.getElementById('exportBtn').addEventListener('click', function() {
+            // Guardar GeoJSON con diálogo de selección
+            document.getElementById('exportBtn').addEventListener('click', async function() {
                 const geojson = {
                     type: "FeatureCollection",
                     features: []
@@ -437,22 +437,37 @@
                 });
 
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson, null, 2));
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                let filename = `inmuebles_${timestamp}.geojson`;
 
-                const existingFiles = document.querySelectorAll('a[download]');
-                if (existingFiles.length > 0) {
-                    if (confirm('¿Quieres reemplazar el archivo GeoJSON anterior o guardar con un nuevo nombre? (Cancelar para nuevo nombre)')) {
-                        filename = 'inmuebles.geojson';
+                // Verificar si el navegador soporta showSaveFilePicker
+                if (window.showSaveFilePicker) {
+                    try {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: 'inmuebles.geojson',
+                            types: [{
+                                description: 'GeoJSON Files',
+                                accept: { 'application/json': ['.geojson', '.json'] }
+                            }],
+                        });
+                        const writable = await handle.createWritable();
+                        await writable.write(dataStr);
+                        await writable.close();
+                        console.log('Archivo guardado en:', handle.name);
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.error('Error al guardar el archivo:', err);
+                            alert('No se pudo guardar el archivo. Verifica los permisos o intenta de nuevo.');
+                        }
                     }
+                } else {
+                    // Fallback para navegadores que no soportan showSaveFilePicker
+                    alert('Tu navegador no soporta la selección de directorio. Se descargará el archivo automáticamente. Usa un navegador moderno (como Chrome 86+) para una mejor experiencia.');
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "inmuebles.geojson");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
                 }
-
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", filename);
-                document.body.appendChild(downloadAnchorNode);
-                downloadAnchorNode.click();
-                downloadAnchorNode.remove();
             });
 
             // Importar desde GeoJSON con opción de reemplazo o agregar
