@@ -5,7 +5,6 @@
     <title>Editor de Mapas Inmobiliarios</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
         html, body {
@@ -69,8 +68,8 @@
             background-color: #28a745;
         }
         #addPropertyBtn {
-            background-color: #FF0000; /* Botón rojo */
-            color: #FFFFFF; /* Letras blancas */
+            background-color: #FF0000;
+            color: #FFFFFF;
         }
         #exportBtn {
             background-color: #ff9800;
@@ -241,6 +240,42 @@
         .popup-table td {
             padding: 5px;
         }
+        .legend {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1100;
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+        }
+        .legend h4 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-circle {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .legend-circle.sale {
+            opacity: 0.8;
+        }
+        .legend-circle.rental {
+            background: transparent !important;
+            border: 2px solid;
+            width: 8px;
+            height: 8px;
+        }
     </style>
 </head>
 <body>
@@ -268,6 +303,14 @@
                 <a href="#" onclick="cambiarMapaBase('esri'); return false;">Esri Satellite</a>
             </div>
         </div>
+        <div class="legend">
+            <h4>Leyenda</h4>
+            <div class="legend-item"><span class="legend-circle" style="background-color: #00BFFF;"></span> Vivienda</div>
+            <div class="legend-item"><span class="legend-circle" style="background-color: #FF0000;"></span> Departamento</div>
+            <div class="legend-item"><span class="legend-circle" style="background-color: #00FF00;"></span> Baldío</div>
+            <div class="legend-item"><span class="legend-circle sale" style="background-color: #000000;"></span> Venta (relleno)</div>
+            <div class="legend-item"><span class="legend-circle rental" style="border-color: #000000;"></span> Alquiler (borde grueso)</div>
+        </div>
     </div>
     <div id="imageModal" class="modal">
         <div class="modal-content">
@@ -281,7 +324,6 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="console.log('Leaflet cargado')" onerror="console.error('Error al cargar Leaflet')"></script>
-    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js" onload="console.log('Leaflet Draw cargado')" onerror="console.error('Error al cargar Leaflet Draw')"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onload="console.log('JSZip cargado')" onerror="console.error('Error al cargar JSZip')"></script>
 
     <script>
@@ -319,19 +361,6 @@
 
             const drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
-
-            const drawControl = new L.Control.Draw({
-                edit: { featureGroup: drawnItems },
-                draw: {
-                    marker: true,
-                    polygon: false,
-                    polyline: false,
-                    rectangle: false,
-                    circle: false,
-                    circlemarker: false
-                }
-            });
-            map.addControl(drawControl);
 
             function getMarkerStyle(type, category) {
                 let color;
@@ -406,17 +435,14 @@
                 }
             });
 
-            // Modo para añadir inmueble manualmente
             let isAddingProperty = false;
             document.getElementById('addPropertyBtn').addEventListener('click', function() {
                 if (isAddingProperty) {
-                    // Desactivar modo
                     isAddingProperty = false;
                     map.off('click', addPropertyOnClick);
                     document.getElementById('addPropertyBtn').textContent = 'Añadir inmueble';
                     map.getContainer().style.cursor = '';
                 } else {
-                    // Activar modo
                     isAddingProperty = true;
                     document.getElementById('addPropertyBtn').textContent = 'Cancelar';
                     map.getContainer().style.cursor = 'crosshair';
@@ -427,11 +453,9 @@
             function addPropertyOnClick(e) {
                 const latlng = e.latlng;
                 getAddressFromCoords(latlng.lat, latlng.lng).then(({ address, locality }) => {
-                    const circleMarker = L.circleMarker(latlng, getMarkerStyle('vivienda', 'venta'));
-                    circleMarker.properties = { imagenes: [], address: address, locality: locality, tipo: 'vivienda', category: 'venta' };
-                    drawnItems.addLayer(circleMarker);
+                    const circleMarker = L.circleMarker(latlng, getMarkerStyle('vivienda', 'venta')).addTo(drawnItems);
+                    circleMarker.properties = { imagenes: [], address: address, locality: locality, tipo: 'vivienda', category: 'venta', isInEditMode: false };
                     mostrarFormulario(circleMarker);
-                    // Desactivar el modo después de añadir
                     isAddingProperty = false;
                     map.off('click', addPropertyOnClick);
                     document.getElementById('addPropertyBtn').textContent = 'Añadir inmueble';
@@ -521,12 +545,12 @@
 
                         L.geoJSON(geojson, {
                             pointToLayer: function(feature, latlng) {
-                                const circleMarker = L.circleMarker(latlng, getMarkerStyle(feature.properties.tipo || 'vivienda', feature.properties.category || 'venta'));
+                                const circleMarker = L.circleMarker(latlng, getMarkerStyle(feature.properties.tipo || 'vivienda', feature.properties.category || 'venta')).addTo(drawnItems);
                                 circleMarker.properties = feature.properties;
+                                circleMarker.properties.isInEditMode = false;
                                 return circleMarker;
                             },
                             onEachFeature: function(feature, layer) {
-                                drawnItems.addLayer(layer);
                                 layer.bindPopup(generarPrevisualizacion(layer));
                             }
                         });
@@ -539,31 +563,12 @@
                 reader.readAsText(file);
             });
 
-            map.on(L.Draw.Event.CREATED, function(e) {
-                const marker = e.layer;
-                const latlng = marker.getLatLng();
-                getAddressFromCoords(latlng.lat, latlng.lng).then(({ address, locality }) => {
-                    const circleMarker = L.circleMarker(latlng, getMarkerStyle('vivienda', 'venta'));
-                    circleMarker.properties = { imagenes: [], address: address, locality: locality, tipo: 'vivienda', category: 'venta' };
-                    drawnItems.addLayer(circleMarker);
-                    mostrarFormulario(circleMarker);
-                });
-            });
-
-            map.on(L.Draw.Event.EDITED, function(e) {
-                e.layers.eachLayer(function(layer) {
-                    if (layer instanceof L.CircleMarker && layer.properties) {
-                        layer.setStyle(getMarkerStyle(layer.properties.tipo, layer.properties.category));
-                        mostrarFormulario(layer);
-                    }
-                });
-            });
-
             function mostrarFormulario(layer) {
                 const props = layer.properties || {};
                 const latlng = layer.getLatLng();
                 console.log('Mostrando formulario para layer:', layer);
                 getAddressFromCoords(latlng.lat, latlng.lng).then(({ address, locality }) => {
+                    layer.properties.isInEditMode = true;
                     const popupContent = `
                         <div class="info-form">
                             <h3>Datos del Inmueble</h3>
@@ -589,7 +594,6 @@
                             <label>Imágenes (máx 3, 800x600px): <input type="file" id="imagenes" accept="image/jpeg,image/png" multiple></label><br>
                             <div id="imagePreview"></div>
                             <button onclick="guardarDatos('${layer._leaflet_id}')">Guardar</button>
-                            <button onclick="editarDatos('${layer._leaflet_id}')">Editar</button>
                             <button onclick="eliminarPunto('${layer._leaflet_id}')">Eliminar</button>
                         </div>
                     `;
@@ -646,11 +650,12 @@
                 layer.properties.tipo = tipo;
                 layer.properties.category = category;
                 layer.properties.precio = precio;
+                layer.properties.isInEditMode = false;
 
                 if (imagenesInput.length > 0) {
                     procesarImagenes(imagenesInput, layer);
                 } else {
-                    actualizarPrevisualizacion(layer);
+                    layer.setPopupContent(generarPrevisualizacion(layer)).openPopup();
                 }
                 layer.setStyle(getMarkerStyle(tipo, category));
             }
@@ -683,7 +688,9 @@
                             ctx.drawImage(img, 0, 0, width, height);
                             layer.properties.imagenes.push(canvas.toDataURL('image/jpeg'));
                             processed++;
-                            if (processed === files.length) actualizarPrevisualizacion(layer);
+                            if (processed === files.length) {
+                                layer.setPopupContent(generarPrevisualizacion(layer)).openPopup();
+                            }
                         };
                         img.src = e.target.result;
                     };
@@ -707,7 +714,7 @@
                 const layer = drawnItems.getLayers().find(l => l.properties?.imagenes?.includes(imgSrc));
                 if (layer) {
                     layer.properties.imagenes.splice(index, 1);
-                    mostrarFormulario(layer);
+                    layer.setPopupContent(generarPrevisualizacion(layer)).openPopup();
                 }
             }
 
@@ -716,20 +723,6 @@
                 if (layer) {
                     drawnItems.removeLayer(layer);
                 }
-            }
-
-            function actualizarPrevisualizacion(layer) {
-                if (layer instanceof L.CircleMarker) {
-                    layer.setStyle(getMarkerStyle(layer.properties.tipo, layer.properties.category));
-                    layer.setPopupContent(generarPrevisualizacion(layer));
-                    layer.closePopup();
-                    layer.openPopup();
-                }
-            }
-
-            function editarDatos(layerId) {
-                const layer = drawnItems.getLayer(layerId);
-                if (layer && layer instanceof L.CircleMarker) mostrarFormulario(layer);
             }
 
             function generarPrevisualizacion(layer) {
@@ -750,6 +743,11 @@
                         <tr><td colspan="2"><button onclick="eliminarPunto('${layer._leaflet_id}')">Eliminar</button></td></tr>
                     </table>
                 `;
+            }
+
+            function editarDatos(layerId) {
+                const layer = drawnItems.getLayer(layerId);
+                if (layer && layer instanceof L.CircleMarker) mostrarFormulario(layer);
             }
 
             let currentImageIndex = 0;
