@@ -13,7 +13,7 @@
             padding: 0;
             height: 100%;
             overflow: hidden;
-            font-family: Arial, sans-serif; /* Tipografía palo seco por defecto */
+            font-family: Arial, sans-serif;
         }
         header {
             position: fixed;
@@ -27,7 +27,7 @@
             gap: 5px;
             box-sizing: border-box;
             height: 60px;
-            align-items: center; /* Centrar verticalmente los elementos */
+            align-items: center;
         }
         #map-container {
             margin-top: 60px;
@@ -57,31 +57,30 @@
             font-family: Arial, sans-serif;
             font-size: 14px;
             transition: background-color 0.3s ease;
-            margin-right: 10px; /* Separación entre botones */
+            margin-right: 10px;
         }
         .custom-button:hover {
-            opacity: 0.9; /* Efecto de hover más sutil */
+            opacity: 0.9;
         }
-        /* Colores específicos para cada botón */
         #searchBtn {
-            background-color: #007bff; /* Celeste */
+            background-color: #007bff;
         }
         #locateBtn {
-            background-color: #28a745; /* Verde */
+            background-color: #28a745;
         }
         #exportBtn {
-            background-color: #ff9800; /* Naranja */
+            background-color: #ff9800;
         }
         .import-container {
-            background-color: #8b5a2b; /* Marrón tierra */
+            background-color: #8b5a2b;
             border-radius: 5px;
-            display: inline-flex; /* Cambiado a inline-flex para mantener en línea */
+            display: inline-flex;
             align-items: center;
             padding: 0 5px;
-            vertical-align: middle; /* Asegurar alineación vertical */
+            vertical-align: middle;
         }
         #importBtn {
-            background-color: #8b5a2b; /* Marrón tierra */
+            background-color: #8b5a2b;
             color: white;
             border: none;
             padding: 8px 15px;
@@ -89,7 +88,7 @@
             cursor: pointer;
             font-family: Arial, sans-serif;
             font-size: 14px;
-            margin: 0; /* Eliminar márgenes dentro del contenedor */
+            margin: 0;
         }
         #importBtn:hover {
             opacity: 0.9;
@@ -103,7 +102,7 @@
             border-radius: 0 5px 5px 0;
         }
         #importInput::-webkit-file-upload-button {
-            background-color: #007bff; /* Azul del navegador, como en la captura */
+            background-color: #007bff;
             color: white;
             border: none;
             padding: 8px 15px;
@@ -111,7 +110,7 @@
             cursor: pointer;
             font-family: Arial, sans-serif;
             font-size: 14px;
-            margin-left: -5px; /* Ajuste para eliminar espacio no deseado */
+            margin-left: -5px;
         }
         #importInput::-webkit-file-upload-button:hover {
             opacity: 0.9;
@@ -276,33 +275,28 @@
         </div>
     </div>
 
-    <!-- Cargar las bibliotecas -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="console.log('Leaflet cargado')" onerror="console.error('Error al cargar Leaflet')"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js" onload="console.log('Leaflet Draw cargado')" onerror="console.error('Error al cargar Leaflet Draw')"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onload="console.log('JSZip cargado')" onerror="console.error('Error al cargar JSZip')"></script>
 
     <script>
-        // Verificar que Leaflet esté cargado antes de ejecutar el código
         if (typeof L === 'undefined') {
             console.error('Leaflet no está definido. Asegúrate de que la biblioteca se cargó correctamente.');
         } else {
             console.log('Leaflet está definido. Procediendo a inicializar el mapa.');
 
-            // Inicializar el mapa
             const map = L.map('map').setView([-32.0589, -59.2276], 8);
             console.log('Mapa inicializado:', map);
 
-            // Definir las capas como en la app anterior
             const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
-            }).addTo(map); // Añadir OSM como capa base inicial
+            }).addTo(map);
             const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: ' Esri'
             });
 
             let currentBaseLayer = osmLayer;
 
-            // Cambiar mapa base
             function cambiarMapaBase(type) {
                 map.eachLayer(function(layer) {
                     if (layer instanceof L.TileLayer) {
@@ -318,15 +312,13 @@
                 console.log(`Cambiando a ${type}, zoom actual: ${map.getZoom()}, centro: (${map.getCenter().lat}, ${map.getCenter().lng})`);
             }
 
-            // Capa para los puntos dibujados
             const drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
 
-            // Configurar herramientas de dibujo para usar solo marcadores (convertiremos a circleMarker)
             const drawControl = new L.Control.Draw({
                 edit: { featureGroup: drawnItems },
                 draw: {
-                    marker: true, // Usaremos esto y lo convertiremos a circleMarker
+                    marker: true,
                     polygon: false,
                     polyline: false,
                     rectangle: false,
@@ -336,24 +328,23 @@
             });
             map.addControl(drawControl);
 
-            // Estilo de los puntos (círculos) según tipo y categoría
             function getMarkerStyle(type, category) {
                 let color;
                 switch (type) {
                     case 'baldio':
-                        color = '#00FF00'; // Verde luminoso
+                        color = '#00FF00';
                         break;
                     case 'departamento':
-                        color = '#FF0000'; // Rojo
+                        color = '#FF0000';
                         break;
                     case 'vivienda':
-                        color = '#00BFFF'; // Azul luminoso
+                        color = '#00BFFF';
                         break;
                     default:
                         color = 'black';
                 }
-                const fillOpacity = category === 'venta' ? 0.8 : 0; // Lleno para venta, vacío para alquiler
-                const weight = category === 'alquiler' ? 3 : 1; // Borde grueso para alquiler
+                const fillOpacity = category === 'venta' ? 0.8 : 0;
+                const weight = category === 'alquiler' ? 3 : 1;
                 return {
                     radius: 8,
                     fillColor: color,
@@ -364,7 +355,6 @@
                 };
             }
 
-            // Función para obtener dirección y localidad
             async function getAddressFromCoords(lat, lng) {
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
@@ -381,7 +371,6 @@
                 }
             }
 
-            // Buscador de lugares con Nominatim
             document.getElementById('searchBtn').addEventListener('click', function() {
                 const query = document.getElementById('searchInput').value;
                 fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
@@ -397,7 +386,6 @@
                     });
             });
 
-            // Botón Localizame
             document.getElementById('locateBtn').addEventListener('click', function() {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(function(position) {
@@ -413,7 +401,6 @@
                 }
             });
 
-            // Guardar GeoJSON con diálogo de selección
             document.getElementById('exportBtn').addEventListener('click', async function() {
                 const geojson = {
                     type: "FeatureCollection",
@@ -436,9 +423,8 @@
                     }
                 });
 
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson, null, 2));
+                const dataStr = JSON.stringify(geojson, null, 2);
 
-                // Verificar si el navegador soporta showSaveFilePicker
                 if (window.showSaveFilePicker) {
                     try {
                         const handle = await window.showSaveFilePicker({
@@ -459,20 +445,21 @@
                         }
                     }
                 } else {
-                    // Fallback para navegadores que no soportan showSaveFilePicker
                     alert('Tu navegador no soporta la selección de directorio. Se descargará el archivo automáticamente. Usa un navegador moderno (como Chrome 86+) para una mejor experiencia.');
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
                     const downloadAnchorNode = document.createElement('a');
-                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("href", url);
                     downloadAnchorNode.setAttribute("download", "inmuebles.geojson");
                     document.body.appendChild(downloadAnchorNode);
                     downloadAnchorNode.click();
-                    downloadAnchorNode.remove();
+                    document.body.removeChild(downloadAnchorNode);
+                    URL.revokeObjectURL(url);
                 }
             });
 
-            // Importar desde GeoJSON con opción de reemplazo o agregar
             document.getElementById('importBtn').addEventListener('click', function() {
-                document.getElementById('importInput').click(); // Simula el clic en el input
+                document.getElementById('importInput').click();
             });
 
             document.getElementById('importInput').addEventListener('change', function(event) {
@@ -481,6 +468,7 @@
 
                 const reader = new FileReader();
                 reader.onload = function(e) {
+                    console.log('Contenido leído:', e.target.result);
                     try {
                         const geojson = JSON.parse(e.target.result);
                         if (geojson.type !== "FeatureCollection") {
@@ -506,14 +494,14 @@
                         });
                     } catch (error) {
                         console.error('Error al cargar el archivo GeoJSON:', error);
-                        alert('Error al cargar el archivo. Asegúrate de que sea un GeoJSON válido.');
+                        console.log('Contenido problemático:', e.target.result);
+                        alert('Error al cargar el archivo. Asegúrate de que sea un GeoJSON válido. Revisa la consola para más detalles.');
                     }
                 };
                 reader.readAsText(file);
             });
 
-            // Evento al crear un punto (convertir marcador a circleMarker)
-            map.on(L.Draw.Event.CREATED, function (e) {
+            map.on(L.Draw.Event.CREATED, function(e) {
                 const marker = e.layer;
                 const latlng = marker.getLatLng();
                 getAddressFromCoords(latlng.lat, latlng.lng).then(({ address, locality }) => {
@@ -524,8 +512,8 @@
                 });
             });
 
-            map.on(L.Draw.Event.EDITED, function (e) {
-                e.layers.eachLayer(function (layer) {
+            map.on(L.Draw.Event.EDITED, function(e) {
+                e.layers.eachLayer(function(layer) {
                     if (layer instanceof L.CircleMarker && layer.properties) {
                         layer.setStyle(getMarkerStyle(layer.properties.tipo, layer.properties.category));
                         mostrarFormulario(layer);
@@ -533,7 +521,6 @@
                 });
             });
 
-            // Mostrar formulario
             function mostrarFormulario(layer) {
                 const props = layer.properties || {};
                 const latlng = layer.getLatLng();
@@ -576,7 +563,6 @@
                 }).catch(error => console.error('Error en getAddressFromCoords:', error));
             }
 
-            // Actualizar estilo del punto
             function actualizarEstilo(layerId) {
                 const layer = drawnItems.getLayer(layerId);
                 if (layer && layer instanceof L.CircleMarker) {
@@ -589,7 +575,6 @@
                 }
             }
 
-            // Guardar datos
             function guardarDatos(layerId) {
                 const layer = drawnItems.getLayer(layerId);
                 if (!layer || !(layer instanceof L.CircleMarker)) {
@@ -632,7 +617,6 @@
                 layer.setStyle(getMarkerStyle(tipo, category));
             }
 
-            // Procesar imágenes con redimensionamiento proporcional
             function procesarImagenes(files, layer) {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -669,7 +653,6 @@
                 }
             }
 
-            // Mostrar previsualización de imágenes
             function mostrarPrevisualizacionImagenes(imagenes) {
                 const preview = document.getElementById('imagePreview');
                 if (preview) {
@@ -682,7 +665,6 @@
                 }
             }
 
-            // Eliminar imagen
             function eliminarImagen(imgSrc, index) {
                 const layer = drawnItems.getLayers().find(l => l.properties?.imagenes?.includes(imgSrc));
                 if (layer) {
@@ -691,7 +673,6 @@
                 }
             }
 
-            // Eliminar punto
             function eliminarPunto(layerId) {
                 const layer = drawnItems.getLayer(layerId);
                 if (layer) {
@@ -699,7 +680,6 @@
                 }
             }
 
-            // Actualizar previsualización
             function actualizarPrevisualizacion(layer) {
                 if (layer instanceof L.CircleMarker) {
                     layer.setStyle(getMarkerStyle(layer.properties.tipo, layer.properties.category));
@@ -709,13 +689,11 @@
                 }
             }
 
-            // Editar datos
             function editarDatos(layerId) {
                 const layer = drawnItems.getLayer(layerId);
                 if (layer && layer instanceof L.CircleMarker) mostrarFormulario(layer);
             }
 
-            // Generar previsualización
             function generarPrevisualizacion(layer) {
                 const props = layer.properties || {};
                 return `
@@ -736,7 +714,6 @@
                 `;
             }
 
-            // Modal para imágenes
             let currentImageIndex = 0;
             let modalImages = [];
 
