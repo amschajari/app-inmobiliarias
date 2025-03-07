@@ -68,6 +68,10 @@
         #locateBtn {
             background-color: #28a745;
         }
+        #addPropertyBtn {
+            background-color: #FF0000; /* Botón rojo */
+            color: #FFFFFF; /* Letras blancas */
+        }
         #exportBtn {
             background-color: #ff9800;
         }
@@ -246,6 +250,7 @@
                 <input type="text" id="searchInput" placeholder="Buscar lugar...">
                 <button id="searchBtn" class="custom-button">BUSCAR</button>
                 <button class="locate-btn custom-button" id="locateBtn">Localizame</button>
+                <button id="addPropertyBtn" class="custom-button">Añadir inmueble</button>
                 <button id="exportBtn" class="custom-button">Guardar GeoJSON</button>
                 <div class="import-container">
                     <button id="importBtn" class="custom-button">Importar GeoJSON</button>
@@ -400,6 +405,39 @@
                     alert('Geolocalización no soportada por este navegador.');
                 }
             });
+
+            // Modo para añadir inmueble manualmente
+            let isAddingProperty = false;
+            document.getElementById('addPropertyBtn').addEventListener('click', function() {
+                if (isAddingProperty) {
+                    // Desactivar modo
+                    isAddingProperty = false;
+                    map.off('click', addPropertyOnClick);
+                    document.getElementById('addPropertyBtn').textContent = 'Añadir inmueble';
+                    map.getContainer().style.cursor = '';
+                } else {
+                    // Activar modo
+                    isAddingProperty = true;
+                    document.getElementById('addPropertyBtn').textContent = 'Cancelar';
+                    map.getContainer().style.cursor = 'crosshair';
+                    map.on('click', addPropertyOnClick);
+                }
+            });
+
+            function addPropertyOnClick(e) {
+                const latlng = e.latlng;
+                getAddressFromCoords(latlng.lat, latlng.lng).then(({ address, locality }) => {
+                    const circleMarker = L.circleMarker(latlng, getMarkerStyle('vivienda', 'venta'));
+                    circleMarker.properties = { imagenes: [], address: address, locality: locality, tipo: 'vivienda', category: 'venta' };
+                    drawnItems.addLayer(circleMarker);
+                    mostrarFormulario(circleMarker);
+                    // Desactivar el modo después de añadir
+                    isAddingProperty = false;
+                    map.off('click', addPropertyOnClick);
+                    document.getElementById('addPropertyBtn').textContent = 'Añadir inmueble';
+                    map.getContainer().style.cursor = '';
+                });
+            }
 
             document.getElementById('exportBtn').addEventListener('click', async function() {
                 const geojson = {
