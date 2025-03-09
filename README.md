@@ -26,5 +26,5 @@ Este es un prototipo de una aplicación para gestionar y buscar inmuebles usando
 
 ## Archivo de Ejemplo
 Podés descargar un archivo GeoJSON de ejemplo aquí:  
-[<i class="fab fa-download"></i> inmuebles.geojson](https://raw.githubusercontent.com/amschajari/app-inmobiliarias/main/inmuebles.geojson)  
+<a href="https://raw.githubusercontent.com/amschajari/app-inmobiliarias/main/inmuebles.geojson" download="inmuebles.geojson">📥 inmuebles.geojson</a>  
 Usalo en el modo búsqueda para probar los filtros.
