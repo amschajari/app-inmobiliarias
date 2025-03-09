@@ -291,6 +291,7 @@
                     <button id="importBtn" class="custom-button">Importar GeoJSON</button>
                     <input type="file" id="importInput" accept=".geojson,.json">
                 </div>
+                <a href="buscar.html" class="custom-button" style="background-color: #6c757d;">Ir a Modo Búsqueda</a>
             </div>
         </div>
     </header>
@@ -324,7 +325,6 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="console.log('Leaflet cargado')" onerror="console.error('Error al cargar Leaflet')"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onload="console.log('JSZip cargado')" onerror="console.error('Error al cargar JSZip')"></script>
 
     <script>
         if (typeof L === 'undefined') {
@@ -332,7 +332,7 @@
         } else {
             console.log('Leaflet está definido. Procediendo a inicializar el mapa.');
 
-            const map = L.map('map').setView([-32.0589, -59.2276], 8);
+            const map = L.map('map').setView([-30.7517, -58.0236], 13); // Ajustado para centrarse en Chajarí
             console.log('Mapa inicializado:', map);
 
             const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -361,6 +361,44 @@
 
             const drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
+
+            // Cargar el GeoJSON de ejemplo al iniciar
+            function cargarGeoJSONDeEjemplo() {
+                fetch('inmuebles.geojson') // Ruta relativa, asumiendo que el archivo está en el mismo directorio
+                    .then(response => response.json())
+                    .then(geojson => {
+                        if (geojson.type !== "FeatureCollection") {
+                            console.error('El archivo no es un GeoJSON válido:', geojson);
+                            alert('El archivo de ejemplo no es un GeoJSON válido.');
+                            return;
+                        }
+
+                        // Limpiar marcadores existentes si los hay
+                        if (drawnItems.getLayers().length > 0) {
+                            drawnItems.clearLayers();
+                        }
+
+                        L.geoJSON(geojson, {
+                            pointToLayer: function(feature, latlng) {
+                                const circleMarker = L.circleMarker(latlng, getMarkerStyle(feature.properties.tipo || 'vivienda', feature.properties.category || 'venta')).addTo(drawnItems);
+                                circleMarker.properties = feature.properties || {};
+                                circleMarker.properties.isInEditMode = false;
+                                return circleMarker;
+                            },
+                            onEachFeature: function(feature, layer) {
+                                layer.bindPopup(generarPrevisualizacion(layer));
+                            }
+                        });
+                        console.log('GeoJSON de ejemplo cargado correctamente.');
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar el GeoJSON de ejemplo:', error);
+                        alert('No se pudo cargar el archivo de ejemplo. Asegúrate de que "inmuebles.geojson" esté en el directorio correcto.');
+                    });
+            }
+
+            // Llamar a la función al cargar la página
+            window.addEventListener('load', cargarGeoJSONDeEjemplo);
 
             function getMarkerStyle(type, category) {
                 let color;

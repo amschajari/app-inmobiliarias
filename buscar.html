@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Buscador de Inmuebles</title>
+    <title>Modo Búsqueda - Mapas Inmobiliarios</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
@@ -42,16 +42,9 @@
             width: 100%;
             z-index: 1000;
         }
-        .search-form {
-            padding: 10px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #ccc;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .search-form label {
-            margin-right: 5px;
+        .search-bar input {
+            padding: 5px;
+            font-family: Arial, sans-serif;
         }
         .custom-button {
             padding: 8px 15px;
@@ -62,32 +55,22 @@
             font-family: Arial, sans-serif;
             font-size: 14px;
             transition: background-color 0.3s ease;
+            margin-right: 10px;
         }
         .custom-button:hover {
             opacity: 0.9;
         }
-        #filterBtn {
+        #searchBtn {
             background-color: #007bff;
         }
-        #loadGeojsonBtn {
-            background-color: #8b5a2b;
+        #locateBtn {
+            background-color: #28a745;
         }
-        #loadGeojsonInput {
-            margin: 0;
-            padding: 0;
-            border: none;
-            font-family: Arial, sans-serif;
-            cursor: pointer;
+        #applyFiltersBtn {
+            background-color: #ff9800;
         }
-        #loadGeojsonInput::-webkit-file-upload-button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
+        #clearFiltersBtn {
+            background-color: #dc3545;
         }
         .layer-toggle {
             position: absolute;
@@ -132,54 +115,6 @@
         }
         .layer-menu a:hover {
             background: rgba(255, 255, 255, 0.2);
-        }
-        .image-preview {
-            display: flex;
-            gap: 10px;
-            padding: 5px 0;
-        }
-        .image-preview img {
-            margin: 5px;
-            max-width: 300px;
-            height: 225px;
-            object-fit: cover;
-            border: 2px solid #ccc;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1200;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 90%;
-            max-height: 90%;
-            overflow: auto;
-            font-family: Arial, sans-serif;
-        }
-        .modal-content img {
-            max-width: 100%;
-            max-height: 80vh;
-        }
-        .modal-buttons {
-            margin-top: 10px;
-        }
-        .modal-buttons button {
-            padding: 5px 10px;
-            margin: 0 5px;
-            font-family: Arial, sans-serif;
         }
         .leaflet-popup-content-wrapper {
             border-radius: 10px;
@@ -234,32 +169,43 @@
             width: 8px;
             height: 8px;
         }
+        .filter-container {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-container select, .filter-container input {
+            padding: 5px;
+            font-family: Arial, sans-serif;
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="search-form">
-            <label>Tipo:
-                <select id="tipo">
-                    <option value="">Todos</option>
-                    <option value="vivienda">Vivienda</option>
-                    <option value="departamento">Departamento</option>
-                    <option value="baldio">Baldío</option>
-                </select>
-            </label>
-            <label>Categoría:
-                <select id="category">
-                    <option value="">Todos</option>
-                    <option value="venta">Venta</option>
-                    <option value="alquiler">Alquiler</option>
-                </select>
-            </label>
-            <label>Precio Mínimo (USD): <input type="number" id="precioMin"></label>
-            <label>Precio Máximo (USD): <input type="number" id="precioMax"></label>
-            <label>Localidad: <input type="text" id="locality"></label>
-            <button id="filterBtn" class="custom-button">Filtrar</button>
-            <button id="loadGeojsonBtn" class="custom-button">Cargar GeoJSON</button>
-            <input type="file" id="loadGeojsonInput" accept=".geojson,.json" style="display: none;">
+        <div class="map-controls">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar lugar...">
+                <button id="searchBtn" class="custom-button">BUSCAR</button>
+                <button class="locate-btn custom-button" id="locateBtn">Localizame</button>
+                <div class="filter-container">
+                    <select id="tipoFilter">
+                        <option value="">Todos los tipos</option>
+                        <option value="vivienda">Vivienda</option>
+                        <option value="departamento">Departamento</option>
+                        <option value="baldio">Baldío</option>
+                    </select>
+                    <select id="categoryFilter">
+                        <option value="">Todas las categorías</option>
+                        <option value="venta">Venta</option>
+                        <option value="alquiler">Alquiler</option>
+                    </select>
+                    <input type="number" id="minPriceFilter" placeholder="Precio mínimo (USD)">
+                    <input type="number" id="maxPriceFilter" placeholder="Precio máximo (USD)">
+                    <button id="applyFiltersBtn" class="custom-button">Filtrar</button>
+                    <button id="clearFiltersBtn" class="custom-button">Limpiar</button>
+                </div>
+                <a href="index.html" class="custom-button" style="background-color: #6c757d;">Ir a Modo Gestión</a>
+            </div>
         </div>
     </header>
     <div id="map-container">
@@ -280,25 +226,16 @@
             <div class="legend-item"><span class="legend-circle rental" style="border-color: #000000;"></span> Alquiler (borde grueso)</div>
         </div>
     </div>
-    <div id="imageModal" class="modal">
-        <div class="modal-content">
-            <img id="modalImage">
-            <div class="modal-buttons">
-                <button id="prevBtn" class="custom-button">Anterior</button>
-                <button id="nextBtn" class="custom-button">Siguiente</button>
-                <button id="closeModalBtn" class="custom-button">Cerrar</button>
-            </div>
-        </div>
-    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="console.log('Leaflet cargado')" onerror="console.error('Error al cargar Leaflet')"></script>
+
     <script>
         if (typeof L === 'undefined') {
             console.error('Leaflet no está definido. Asegúrate de que la biblioteca se cargó correctamente.');
         } else {
             console.log('Leaflet está definido. Procediendo a inicializar el mapa.');
 
-            const map = L.map('map').setView([-32.0589, -59.2276], 8);
+            const map = L.map('map').setView([-30.7517, -58.0236], 13); // Coincide con index.html
             console.log('Mapa inicializado:', map);
 
             const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -328,6 +265,32 @@
             const drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
 
+            let geojsonData = null; // Variable para almacenar el GeoJSON cargado
+
+            // Cargar el GeoJSON de ejemplo al iniciar
+            function cargarGeoJSONDeEjemplo() {
+                fetch('inmuebles.geojson') // Ruta relativa
+                    .then(response => response.json())
+                    .then(geojson => {
+                        if (geojson.type !== "FeatureCollection") {
+                            console.error('El archivo no es un GeoJSON válido:', geojson);
+                            alert('El archivo de ejemplo no es un GeoJSON válido.');
+                            return;
+                        }
+
+                        geojsonData = geojson; // Almacenar el GeoJSON para usarlo en los filtros
+                        aplicarFiltros(); // Mostrar todos los marcadores inicialmente
+                        console.log('GeoJSON de ejemplo cargado correctamente.');
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar el GeoJSON de ejemplo:', error);
+                        alert('No se pudo cargar el archivo de ejemplo. Asegúrate de que "inmuebles.geojson" esté en el directorio correcto.');
+                    });
+            }
+
+            // Llamar a la función al cargar la página
+            window.addEventListener('load', cargarGeoJSONDeEjemplo);
+
             function getMarkerStyle(type, category) {
                 let color;
                 switch (type) {
@@ -355,70 +318,86 @@
                 };
             }
 
-            document.getElementById('loadGeojsonBtn').addEventListener('click', function() {
-                document.getElementById('loadGeojsonInput').click();
-            });
+            function aplicarFiltros() {
+                if (!geojsonData) return;
 
-            document.getElementById('loadGeojsonInput').addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+                // Limpiar marcadores existentes
+                drawnItems.clearLayers();
 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    console.log('Contenido leído:', e.target.result);
-                    try {
-                        const geojson = JSON.parse(e.target.result);
-                        if (geojson.type !== "FeatureCollection") {
-                            alert("El archivo no es un GeoJSON válido.");
-                            return;
-                        }
+                // Obtener valores de los filtros
+                const tipoFilter = document.getElementById('tipoFilter').value;
+                const categoryFilter = document.getElementById('categoryFilter').value;
+                const minPrice = parseFloat(document.getElementById('minPriceFilter').value) || -Infinity;
+                const maxPrice = parseFloat(document.getElementById('maxPriceFilter').value) || Infinity;
 
-                        drawnItems.clearLayers();
-
-                        L.geoJSON(geojson, {
-                            pointToLayer: function(feature, latlng) {
-                                const circleMarker = L.circleMarker(latlng, getMarkerStyle(feature.properties.tipo || 'vivienda', feature.properties.category || 'venta')).addTo(drawnItems);
-                                circleMarker.properties = feature.properties;
-                                return circleMarker;
-                            },
-                            onEachFeature: function(feature, layer) {
-                                layer.bindPopup(generarPrevisualizacion(layer));
-                            }
-                        });
-
-                        // Ajustar el mapa para mostrar todos los puntos
-                        if (drawnItems.getLayers().length > 0) {
-                            map.fitBounds(drawnItems.getBounds());
-                        }
-                    } catch (error) {
-                        console.error('Error al cargar el archivo GeoJSON:', error);
-                        alert('Error al cargar el archivo. Asegúrate de que sea un GeoJSON válido.');
-                    }
-                };
-                reader.readAsText(file);
-            });
-
-            document.getElementById('filterBtn').addEventListener('click', function() {
-                const tipo = document.getElementById('tipo').value;
-                const category = document.getElementById('category').value;
-                const precioMin = parseFloat(document.getElementById('precioMin').value) || 0;
-                const precioMax = parseFloat(document.getElementById('precioMax').value) || Infinity;
-                const locality = document.getElementById('locality').value.toLowerCase();
-
-                drawnItems.eachLayer(function(layer) {
-                    const props = layer.properties || {};
-                    const matchesTipo = !tipo || props.tipo === tipo;
-                    const matchesCategory = !category || props.category === category;
+                // Filtrar las características del GeoJSON
+                const filteredFeatures = geojsonData.features.filter(feature => {
+                    const props = feature.properties || {};
+                    const tipoMatch = !tipoFilter || props.tipo === tipoFilter;
+                    const categoryMatch = !categoryFilter || props.category === categoryFilter;
                     const precio = parseFloat(props.precio) || 0;
-                    const matchesPrecio = precio >= precioMin && precio <= precioMax;
-                    const matchesLocality = !locality || (props.locality && props.locality.toLowerCase().includes(locality));
+                    const priceMatch = precio >= minPrice && precio <= maxPrice;
+                    return tipoMatch && categoryMatch && priceMatch;
+                });
 
-                    if (matchesTipo && matchesCategory && matchesPrecio && matchesLocality) {
-                        layer.addTo(map);
-                    } else {
-                        map.removeLayer(layer);
+                // Crear un nuevo GeoJSON con las características filtradas
+                const filteredGeoJSON = {
+                    type: "FeatureCollection",
+                    features: filteredFeatures
+                };
+
+                // Renderizar los marcadores filtrados
+                L.geoJSON(filteredGeoJSON, {
+                    pointToLayer: function(feature, latlng) {
+                        const circleMarker = L.circleMarker(latlng, getMarkerStyle(feature.properties.tipo || 'vivienda', feature.properties.category || 'venta')).addTo(drawnItems);
+                        circleMarker.properties = feature.properties || {};
+                        return circleMarker;
+                    },
+                    onEachFeature: function(feature, layer) {
+                        layer.bindPopup(generarPrevisualizacion(layer));
                     }
                 });
+            }
+
+            function limpiarFiltros() {
+                document.getElementById('tipoFilter').value = '';
+                document.getElementById('categoryFilter').value = '';
+                document.getElementById('minPriceFilter').value = '';
+                document.getElementById('maxPriceFilter').value = '';
+                aplicarFiltros(); // Volver a mostrar todos los marcadores
+            }
+
+            document.getElementById('applyFiltersBtn').addEventListener('click', aplicarFiltros);
+            document.getElementById('clearFiltersBtn').addEventListener('click', limpiarFiltros);
+
+            document.getElementById('searchBtn').addEventListener('click', function() {
+                const query = document.getElementById('searchInput').value;
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lon = parseFloat(data[0].lon);
+                            map.setView([lat, lon], 13);
+                        } else {
+                            alert('Lugar no encontrado');
+                        }
+                    });
+            });
+
+            document.getElementById('locateBtn').addEventListener('click', function() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        map.setView([lat, lon], 13);
+                        L.marker([lat, lon]).addTo(map).bindPopup('Estás aquí').openPopup();
+                    }, function() {
+                        alert('No se pudo obtener tu ubicación.');
+                    });
+                } else {
+                    alert('Geolocalización no soportada por este navegador.');
+                }
             });
 
             function generarPrevisualizacion(layer) {
@@ -434,49 +413,9 @@
                         <tr><td>Tipo:</td><td>${props.tipo || ''}</td></tr>
                         <tr><td>Categoría:</td><td>${props.category || ''}</td></tr>
                         <tr><td>Precio:</td><td>$${props.precio || ''} USD</td></tr>
-                        <tr><td>Imágenes:</td><td><div class="image-preview">${props.imagenes && props.imagenes.length > 0 ? props.imagenes.map((img, index) => `<img src="${img}" onclick="openImageModal(${index}, ${JSON.stringify(props.imagenes)})">`).join('') : 'Ninguna'}</div></td></tr>
                     </table>
                 `;
             }
-
-            let currentImageIndex = 0;
-            let modalImages = [];
-
-            function openImageModal(index, images) {
-                modalImages = images;
-                currentImageIndex = index;
-                document.getElementById('modalImage').src = modalImages[currentImageIndex];
-                document.getElementById('imageModal').style.display = 'flex';
-                updateModalButtons();
-            }
-
-            function closeModal() {
-                document.getElementById('imageModal').style.display = 'none';
-            }
-
-            function prevImage() {
-                currentImageIndex = (currentImageIndex - 1 + modalImages.length) % modalImages.length;
-                document.getElementById('modalImage').src = modalImages[currentImageIndex];
-                updateModalButtons();
-            }
-
-            function nextImage() {
-                currentImageIndex = (currentImageIndex + 1) % modalImages.length;
-                document.getElementById('modalImage').src = modalImages[currentImageIndex];
-                updateModalButtons();
-            }
-
-            function updateModalButtons() {
-                document.getElementById('prevBtn').disabled = modalImages.length <= 1;
-                document.getElementById('nextBtn').disabled = modalImages.length <= 1;
-            }
-
-            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-            document.getElementById('prevBtn').addEventListener('click', prevImage);
-            document.getElementById('nextBtn').addEventListener('click', nextImage);
-            document.getElementById('imageModal').addEventListener('click', function(e) {
-                if (e.target === this) closeModal();
-            });
         }
     </script>
 </body>
