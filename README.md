@@ -5,7 +5,7 @@ Este es un prototipo de una aplicación para gestionar y buscar inmuebles usando
 ## Funcionalidades
 
 ### 1. Gestión de Inmuebles (index.html)
-- **URL**: [Abrir Modo Gestión](https://tu-usuario.github.io/app-inmobiliarias/)
+- **URL**: [Abrir Modo Gestión](https://amschajari.github.io/app-inmobiliarias/index.html)
 - **Descripción**: Permite añadir, editar y eliminar inmuebles en un mapa. Podés exportar los datos como un archivo GeoJSON usando el botón "Guardar GeoJSON".
 - **Instrucciones**:
   1. Hacé clic en "Añadir inmueble" para agregar un nuevo punto en el mapa.
@@ -13,7 +13,7 @@ Este es un prototipo de una aplicación para gestionar y buscar inmuebles usando
   3. Guardá los cambios y exportá los datos con "Guardar GeoJSON".
 
 ### 2. Búsqueda de Inmuebles (buscar.html)
-- **URL**: [Abrir Modo Búsqueda](https://tu-usuario.github.io/app-inmobiliarias/buscar.html)
+- **URL**: [Abrir Modo Búsqueda](https://amschajari.github.io/app-inmobiliarias/buscar.html)
 - **Descripción**: Permite buscar inmuebles cargando un archivo GeoJSON y aplicando filtros (tipo, categoría, precio, localidad).
 - **Instrucciones**:
   1. Hacé clic en "Cargar GeoJSON" y seleccioná el archivo `inmuebles.geojson` generado desde el modo gestión.
