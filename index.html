@@ -74,6 +74,9 @@
         #exportBtn {
             background-color: #ff9800;
         }
+        #instructionsBtn {
+            background-color: #17a2b8;
+        }
         .import-container {
             background-color: #8b5a2b;
             border-radius: 5px;
@@ -205,7 +208,7 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            text-align: center;
+            text-align: left;
             max-width: 90%;
             max-height: 90%;
             overflow: auto;
@@ -217,6 +220,7 @@
         }
         .modal-buttons {
             margin-top: 10px;
+            text-align: center;
         }
         .modal-buttons button {
             padding: 5px 10px;
@@ -291,6 +295,7 @@
                     <button id="importBtn" class="custom-button">Importar GeoJSON</button>
                     <input type="file" id="importInput" accept=".geojson,.json">
                 </div>
+                <button id="instructionsBtn" class="custom-button">Instrucciones</button>
                 <a href="buscar.html" class="custom-button" style="background-color: #6c757d;">Ir a Modo Búsqueda</a>
             </div>
         </div>
@@ -323,6 +328,39 @@
             </div>
         </div>
     </div>
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <h1>Prototipo de Aplicación Inmobiliaria</h1>
+            <p>Este es un prototipo de una aplicación web para gestionar y buscar propiedades inmobiliarias en un mapa interactivo. Utiliza la biblioteca <a href="https://leafletjs.com/" target="_blank">Leaflet</a> para la visualización de mapas.</p>
+            <h2>Modos de Uso</h2>
+            <ul>
+                <li><strong>Modo Gestión (<a href="index.html">index.html</a>)</strong>: Permite añadir, editar y eliminar inmuebles, así como exportar e importar datos en formato GeoJSON.</li>
+                <li><strong>Modo Búsqueda (<a href="buscar.html">buscar.html</a>)</strong>: Permite buscar y filtrar inmuebles según tipo, categoría y precio.</li>
+            </ul>
+            <h2>Funcionalidades del Modo Gestión</h2>
+            <ul>
+                <li><strong>Buscar Lugar</strong>: Ingresa una dirección o lugar para centrar el mapa.</li>
+                <li><strong>Localizame</strong>: Usa tu ubicación actual para centrar el mapa.</li>
+                <li><strong>Añadir Inmueble</strong>: Haz clic en el mapa para añadir un marcador y completar los datos (dirección, tipo, categoría, precio, superficies, imágenes).</li>
+                <li><strong>Editar/Eliminar</strong>: Haz clic en un marcador para editar sus datos o eliminarlo.</li>
+                <li><strong>Exportar GeoJSON</strong>: Guarda los inmuebles en un archivo GeoJSON.</li>
+                <li><strong>Importar GeoJSON</strong>: Carga un archivo GeoJSON para visualizar los inmuebles.</li>
+            </ul>
+            <h2>Funcionalidades del Modo Búsqueda</h2>
+            <ul>
+                <li><strong>Filtros</strong>: Filtra inmuebles por tipo (vivienda, departamento, baldío), categoría (venta, alquiler) y rango de precio.</li>
+                <li><strong>Buscar Lugar</strong>: Centra el mapa en una dirección específica.</li>
+                <li><strong>Localizame</strong>: Usa tu ubicación actual para centrar el mapa.</li>
+            </ul>
+            <h2>Archivo de Ejemplo</h2>
+            <p>Podés descargar un archivo GeoJSON de ejemplo aquí:  
+            <a href="https://raw.githubusercontent.com/amschajari/app-inmobiliarias/main/inmuebles.geojson" download="inmuebles.geojson">📥 inmuebles.geojson</a>  
+            Usalo en el modo búsqueda para probar los filtros. Si la descarga no se inicia, haz clic derecho en el enlace y selecciona "Guardar enlace como...".</p>
+            <div class="modal-buttons">
+                <button id="closeInstructionsModalBtn" class="custom-button">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="console.log('Leaflet cargado')" onerror="console.error('Error al cargar Leaflet')"></script>
 
@@ -332,7 +370,7 @@
         } else {
             console.log('Leaflet está definido. Procediendo a inicializar el mapa.');
 
-            const map = L.map('map').setView([-30.7517, -58.0236], 13); // Ajustado para centrarse en Chajarí
+            const map = L.map('map').setView([-30.7517, -58.0236], 13);
             console.log('Mapa inicializado:', map);
 
             const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -362,9 +400,8 @@
             const drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
 
-            // Cargar el GeoJSON de ejemplo al iniciar
             function cargarGeoJSONDeEjemplo() {
-                fetch('inmuebles.geojson') // Ruta relativa, asumiendo que el archivo está en el mismo directorio
+                fetch('inmuebles.geojson')
                     .then(response => response.json())
                     .then(geojson => {
                         if (geojson.type !== "FeatureCollection") {
@@ -373,7 +410,6 @@
                             return;
                         }
 
-                        // Limpiar marcadores existentes si los hay
                         if (drawnItems.getLayers().length > 0) {
                             drawnItems.clearLayers();
                         }
@@ -397,7 +433,6 @@
                     });
             }
 
-            // Llamar a la función al cargar la página
             window.addEventListener('load', cargarGeoJSONDeEjemplo);
 
             function getMarkerStyle(type, category) {
@@ -825,6 +860,21 @@
             document.getElementById('nextBtn').addEventListener('click', nextImage);
             document.getElementById('imageModal').addEventListener('click', function(e) {
                 if (e.target === this) closeModal();
+            });
+
+            // Funcionalidad para el modal de instrucciones
+            document.getElementById('instructionsBtn').addEventListener('click', function() {
+                document.getElementById('instructionsModal').style.display = 'flex';
+            });
+
+            document.getElementById('closeInstructionsModalBtn').addEventListener('click', function() {
+                document.getElementById('instructionsModal').style.display = 'none';
+            });
+
+            document.getElementById('instructionsModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    document.getElementById('instructionsModal').style.display = 'none';
+                }
             });
         }
     </script>

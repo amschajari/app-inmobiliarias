@@ -72,6 +72,9 @@
         #clearFiltersBtn {
             background-color: #dc3545;
         }
+        #instructionsBtn {
+            background-color: #17a2b8;
+        }
         .layer-toggle {
             position: absolute;
             top: 10px;
@@ -178,6 +181,37 @@
             padding: 5px;
             font-family: Arial, sans-serif;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            font-family: Arial, sans-serif;
+        }
+        .modal-buttons {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .modal-buttons button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            font-family: Arial, sans-serif;
+        }
     </style>
 </head>
 <body>
@@ -204,6 +238,7 @@
                     <button id="applyFiltersBtn" class="custom-button">Filtrar</button>
                     <button id="clearFiltersBtn" class="custom-button">Limpiar</button>
                 </div>
+                <button id="instructionsBtn" class="custom-button">Instrucciones</button>
                 <a href="index.html" class="custom-button" style="background-color: #6c757d;">Ir a Modo Gestión</a>
             </div>
         </div>
@@ -226,6 +261,39 @@
             <div class="legend-item"><span class="legend-circle rental" style="border-color: #000000;"></span> Alquiler (borde grueso)</div>
         </div>
     </div>
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <h1>Prototipo de Aplicación Inmobiliaria</h1>
+            <p>Este es un prototipo de una aplicación web para gestionar y buscar propiedades inmobiliarias en un mapa interactivo. Utiliza la biblioteca <a href="https://leafletjs.com/" target="_blank">Leaflet</a> para la visualización de mapas.</p>
+            <h2>Modos de Uso</h2>
+            <ul>
+                <li><strong>Modo Gestión (<a href="index.html">index.html</a>)</strong>: Permite añadir, editar y eliminar inmuebles, así como exportar e importar datos en formato GeoJSON.</li>
+                <li><strong>Modo Búsqueda (<a href="buscar.html">buscar.html</a>)</strong>: Permite buscar y filtrar inmuebles según tipo, categoría y precio.</li>
+            </ul>
+            <h2>Funcionalidades del Modo Gestión</h2>
+            <ul>
+                <li><strong>Buscar Lugar</strong>: Ingresa una dirección o lugar para centrar el mapa.</li>
+                <li><strong>Localizame</strong>: Usa tu ubicación actual para centrar el mapa.</li>
+                <li><strong>Añadir Inmueble</strong>: Haz clic en el mapa para añadir un marcador y completar los datos (dirección, tipo, categoría, precio, superficies, imágenes).</li>
+                <li><strong>Editar/Eliminar</strong>: Haz clic en un marcador para editar sus datos o eliminarlo.</li>
+                <li><strong>Exportar GeoJSON</strong>: Guarda los inmuebles en un archivo GeoJSON.</li>
+                <li><strong>Importar GeoJSON</strong>: Carga un archivo GeoJSON para visualizar los inmuebles.</li>
+            </ul>
+            <h2>Funcionalidades del Modo Búsqueda</h2>
+            <ul>
+                <li><strong>Filtros</strong>: Filtra inmuebles por tipo (vivienda, departamento, baldío), categoría (venta, alquiler) y rango de precio.</li>
+                <li><strong>Buscar Lugar</strong>: Centra el mapa en una dirección específica.</li>
+                <li><strong>Localizame</strong>: Usa tu ubicación actual para centrar el mapa.</li>
+            </ul>
+            <h2>Archivo de Ejemplo</h2>
+            <p>Podés descargar un archivo GeoJSON de ejemplo aquí:  
+            <a href="https://raw.githubusercontent.com/amschajari/app-inmobiliarias/main/inmuebles.geojson" download="inmuebles.geojson">📥 inmuebles.geojson</a>  
+            Usalo en el modo búsqueda para probar los filtros. Si la descarga no se inicia, haz clic derecho en el enlace y selecciona "Guardar enlace como...".</p>
+            <div class="modal-buttons">
+                <button id="closeInstructionsModalBtn" class="custom-button">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="console.log('Leaflet cargado')" onerror="console.error('Error al cargar Leaflet')"></script>
 
@@ -235,7 +303,7 @@
         } else {
             console.log('Leaflet está definido. Procediendo a inicializar el mapa.');
 
-            const map = L.map('map').setView([-30.7517, -58.0236], 13); // Coincide con index.html
+            const map = L.map('map').setView([-30.7517, -58.0236], 13);
             console.log('Mapa inicializado:', map);
 
             const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -265,11 +333,10 @@
             const drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
 
-            let geojsonData = null; // Variable para almacenar el GeoJSON cargado
+            let geojsonData = null;
 
-            // Cargar el GeoJSON de ejemplo al iniciar
             function cargarGeoJSONDeEjemplo() {
-                fetch('inmuebles.geojson') // Ruta relativa
+                fetch('inmuebles.geojson')
                     .then(response => response.json())
                     .then(geojson => {
                         if (geojson.type !== "FeatureCollection") {
@@ -278,8 +345,8 @@
                             return;
                         }
 
-                        geojsonData = geojson; // Almacenar el GeoJSON para usarlo en los filtros
-                        aplicarFiltros(); // Mostrar todos los marcadores inicialmente
+                        geojsonData = geojson;
+                        aplicarFiltros();
                         console.log('GeoJSON de ejemplo cargado correctamente.');
                     })
                     .catch(error => {
@@ -288,7 +355,6 @@
                     });
             }
 
-            // Llamar a la función al cargar la página
             window.addEventListener('load', cargarGeoJSONDeEjemplo);
 
             function getMarkerStyle(type, category) {
@@ -321,16 +387,13 @@
             function aplicarFiltros() {
                 if (!geojsonData) return;
 
-                // Limpiar marcadores existentes
                 drawnItems.clearLayers();
 
-                // Obtener valores de los filtros
                 const tipoFilter = document.getElementById('tipoFilter').value;
                 const categoryFilter = document.getElementById('categoryFilter').value;
                 const minPrice = parseFloat(document.getElementById('minPriceFilter').value) || -Infinity;
                 const maxPrice = parseFloat(document.getElementById('maxPriceFilter').value) || Infinity;
 
-                // Filtrar las características del GeoJSON
                 const filteredFeatures = geojsonData.features.filter(feature => {
                     const props = feature.properties || {};
                     const tipoMatch = !tipoFilter || props.tipo === tipoFilter;
@@ -340,13 +403,11 @@
                     return tipoMatch && categoryMatch && priceMatch;
                 });
 
-                // Crear un nuevo GeoJSON con las características filtradas
                 const filteredGeoJSON = {
                     type: "FeatureCollection",
                     features: filteredFeatures
                 };
 
-                // Renderizar los marcadores filtrados
                 L.geoJSON(filteredGeoJSON, {
                     pointToLayer: function(feature, latlng) {
                         const circleMarker = L.circleMarker(latlng, getMarkerStyle(feature.properties.tipo || 'vivienda', feature.properties.category || 'venta')).addTo(drawnItems);
@@ -364,7 +425,7 @@
                 document.getElementById('categoryFilter').value = '';
                 document.getElementById('minPriceFilter').value = '';
                 document.getElementById('maxPriceFilter').value = '';
-                aplicarFiltros(); // Volver a mostrar todos los marcadores
+                aplicarFiltros();
             }
 
             document.getElementById('applyFiltersBtn').addEventListener('click', aplicarFiltros);
@@ -416,6 +477,21 @@
                     </table>
                 `;
             }
+
+            // Funcionalidad para el modal de instrucciones
+            document.getElementById('instructionsBtn').addEventListener('click', function() {
+                document.getElementById('instructionsModal').style.display = 'flex';
+            });
+
+            document.getElementById('closeInstructionsModalBtn').addEventListener('click', function() {
+                document.getElementById('instructionsModal').style.display = 'none';
+            });
+
+            document.getElementById('instructionsModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    document.getElementById('instructionsModal').style.display = 'none';
+                }
+            });
         }
     </script>
 </body>
